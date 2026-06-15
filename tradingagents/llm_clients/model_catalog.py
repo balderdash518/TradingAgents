@@ -100,6 +100,16 @@ MODEL_OPTIONS: ProviderModeOptions = {
         ],
     },
     # OpenRouter: fetched dynamically. Azure: any deployed model name.
+    "dmxapi": {
+        "quick": [
+            ("GPT-5 Mini", "gpt-5-mini"),
+            ("Custom model ID", "custom"),
+        ],
+        "deep": [
+            ("GPT-5 Mini", "gpt-5-mini"),
+            ("Custom model ID", "custom"),
+        ],
+    },
     "ollama": {
         "quick": [
             ("Qwen3:latest (8B, local)", "qwen3:latest"),
