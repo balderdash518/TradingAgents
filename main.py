@@ -7,9 +7,9 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 # editing this script. Override individual keys here only when you
 # want a hard-coded value that should ignore the environment.
 config = DEFAULT_CONFIG.copy()
-config["llm_provider"] = "dmxapi"
-config["deep_think_llm"] = "gpt-5-mini"
-config["quick_think_llm"] = "gpt-5-mini"
+config["llm_provider"] = "openrouter"
+config["deep_think_llm"] = "mistralai/mistral-small-3.2-24b-instruct"
+config["quick_think_llm"] = "mistralai/mistral-small-3.2-24b-instruct"
 config["backend_url"] = None
 config["max_debate_rounds"] = 1  # Increase debate rounds
 

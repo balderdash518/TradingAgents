@@ -2,6 +2,7 @@ from typing import Annotated
 
 from langchain_core.tools import tool
 
+from tradingagents.dataflows.errors import VendorNotConfiguredError
 from tradingagents.dataflows.interface import route_to_vendor
 
 
@@ -33,4 +34,11 @@ def get_macro_indicators(
     Returns:
         str: A formatted markdown report of the macro series
     """
-    return route_to_vendor("get_macro_indicators", indicator, curr_date, look_back_days)
+    try:
+        return route_to_vendor("get_macro_indicators", indicator, curr_date, look_back_days)
+    except VendorNotConfiguredError as exc:
+        return (
+            "MACRO_DATA_UNAVAILABLE: The macro indicator tool is not configured "
+            f"({exc}). Continue the analysis using available market/news data; "
+            "do not fabricate macro indicator values."
+        )
