@@ -1,0 +1,15 @@
+{
+  "tickers": ["AAPL", "GOOGL", "AMZN"],
+  "start": "2024-01-01",
+  "end": "2024-04-11",
+  "output_dir": "results/reproduce_tradingagents_2024_01_01_2024_04_11",
+  "provider": "openrouter",
+  "quick_model": "mistralai/mistral-small-3.2-24b-instruct",
+  "deep_model": "mistralai/mistral-small-3.2-24b-instruct",
+  "selected_analysts": ["market", "social", "news", "fundamentals"],
+  "asset_type": "stock",
+  "long_short": true,
+  "max_debate_rounds": 1,
+  "max_risk_discuss_rounds": 1,
+  "temperature": 0.0
+}
