@@ -12,7 +12,6 @@ from typing import Any
 import pandas as pd
 import yfinance as yf
 
-
 RATING_TO_EXPOSURE_LONG_SHORT = {
     "Buy": 1.0,
     "Overweight": 0.75,
@@ -39,7 +38,8 @@ class ReproConfig:
     provider: str = "openrouter"
     quick_model: str = "mistralai/mistral-small-3.2-24b-instruct"
     deep_model: str = "mistralai/mistral-small-3.2-24b-instruct"
-    selected_analysts: tuple[str, ...] = ("market", "social", "news", "fundamentals")
+    selected_analysts: tuple[str, ...] = ("market", "news", "fundamentals")
+    analyst_concurrency_limit: int = 3
     long_short: bool = True
     max_debate_rounds: int = 1
     max_risk_discuss_rounds: int = 1
@@ -53,6 +53,9 @@ class ReproConfig:
 
 def load_config(path: Path) -> ReproConfig:
     data = json.loads(path.read_text(encoding="utf-8"))
+    selected_analysts = tuple(
+        data.get("selected_analysts", ["market", "news", "fundamentals"])
+    )
     return ReproConfig(
         tickers=list(data["tickers"]),
         start=data["start"],
@@ -61,7 +64,13 @@ def load_config(path: Path) -> ReproConfig:
         provider=data.get("provider", "openrouter"),
         quick_model=data.get("quick_model", "mistralai/mistral-small-3.2-24b-instruct"),
         deep_model=data.get("deep_model", "mistralai/mistral-small-3.2-24b-instruct"),
-        selected_analysts=tuple(data.get("selected_analysts", ["market", "social", "news", "fundamentals"])),
+        selected_analysts=selected_analysts,
+        analyst_concurrency_limit=int(
+            data.get(
+                "analyst_concurrency_limit",
+                min(3, max(1, len(selected_analysts))),
+            )
+        ),
         long_short=bool(data.get("long_short", True)),
         max_debate_rounds=int(data.get("max_debate_rounds", 1)),
         max_risk_discuss_rounds=int(data.get("max_risk_discuss_rounds", 1)),
@@ -143,6 +152,7 @@ def make_agent_config(cfg: ReproConfig) -> dict[str, Any]:
     agent_config["temperature"] = cfg.temperature
     agent_config["llm_timeout"] = cfg.llm_timeout
     agent_config["llm_max_retries"] = cfg.llm_max_retries
+    agent_config["analyst_concurrency_limit"] = cfg.analyst_concurrency_limit
     agent_config["results_dir"] = str(cfg.output_dir / "agent_logs")
     agent_config["memory_log_path"] = str(cfg.output_dir / "memory" / "trading_memory.md")
     agent_config["data_cache_dir"] = str(cfg.output_dir / "cache")

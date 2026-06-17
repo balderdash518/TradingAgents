@@ -12,6 +12,7 @@ config["deep_think_llm"] = "deepseek/deepseek-v4-pro"
 config["quick_think_llm"] = "deepseek/deepseek-v4-pro"
 config["backend_url"] = None
 config["max_debate_rounds"] = 1  # Increase debate rounds
+config["analyst_concurrency_limit"] = 3
 
 # Configure data vendors (default uses yfinance, no extra API keys needed)
 config["data_vendors"] = {
@@ -22,7 +23,11 @@ config["data_vendors"] = {
 }
 
 # Initialize with custom config
-ta = TradingAgentsGraph(debug=True, config=config)
+ta = TradingAgentsGraph(
+    selected_analysts=["market", "news", "fundamentals"],
+    debug=True,
+    config=config,
+)
 
 # forward propagate
 _, decision = ta.propagate("NVDA", "2024-05-10")

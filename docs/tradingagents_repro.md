@@ -13,6 +13,11 @@ It does not implement the rule-based baselines (`B&H`, `MACD`, `KDJ&RSI`, `ZMR`,
 The original paper does not ship the authors' daily decision log or exact execution ledger. This script therefore makes the execution rule explicit:
 
 - TradingAgents runs once for each trading day.
+- The configured analyst set is `market`, `news`, and `fundamentals`.
+  The Sentiment/Social analyst is intentionally disabled to avoid Reddit /
+  StockTwits rate limits.
+- Analysts for the same ticker/date run concurrently with
+  `analyst_concurrency_limit: 3`; dates still run in chronological order.
 - The final rating is mapped to exposure:
   - `Buy`: `+1.00`
   - `Overweight`: `+0.75`
@@ -33,9 +38,9 @@ Because LLM outputs, data vendors, and missing paper artifacts differ from the o
 - `configs/tradingagents_repro.json`: experiment settings
 - `scripts/reproduce_tradingagents_table.py`: command-line runner
 - `tradingagents/backtesting/tradingagents_repro.py`: reusable implementation
-- `results/reproduce_tradingagents_2024_01_01_2024_04_11/decisions.csv`: cached daily decisions
-- `results/reproduce_tradingagents_2024_01_01_2024_04_11/tradingagents_metrics.csv`: final metrics
-- `results/reproduce_tradingagents_2024_01_01_2024_04_11/tradingagents_table.md`: markdown table row
+- `results/reproduce_tradingagents_parallel_nosocial_2024_01_01_2024_04_11/decisions.csv`: cached daily decisions
+- `results/reproduce_tradingagents_parallel_nosocial_2024_01_01_2024_04_11/tradingagents_metrics.csv`: final metrics
+- `results/reproduce_tradingagents_parallel_nosocial_2024_01_01_2024_04_11/tradingagents_table.md`: markdown table row
 
 ## Run
 
@@ -49,9 +54,10 @@ conda activate tradingagents
 python scripts/reproduce_tradingagents_table.py --run-agents --limit-dates 1
 ```
 
-For a faster and more stable approximation, use the fast config. It removes the
-Sentiment Analyst, which avoids Reddit / StockTwits calls, and uses Mistral on
-OpenRouter because it has passed both plain and structured-output smoke tests:
+The default reproduction config already disables the Sentiment Analyst and runs
+the remaining analysts in parallel. For a faster and more stable approximation,
+use the fast config, which also uses Mistral on OpenRouter because it has passed
+both plain and structured-output smoke tests:
 
 ```powershell
 python scripts/reproduce_tradingagents_table.py --config configs/tradingagents_repro_fast.json --run-agents --limit-dates 1

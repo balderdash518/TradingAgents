@@ -18,6 +18,8 @@ _ENV_OVERRIDES = {
     "TRADINGAGENTS_CHECKPOINT_ENABLED":   "checkpoint_enabled",
     "TRADINGAGENTS_BENCHMARK_TICKER":     "benchmark_ticker",
     "TRADINGAGENTS_TEMPERATURE":          "temperature",
+    "TRADINGAGENTS_ANALYST_CONCURRENCY_LIMIT": "analyst_concurrency_limit",
+    "TRADINGAGENTS_MAX_ANALYST_TOOL_ROUNDS":   "max_analyst_tool_rounds",
 }
 
 
@@ -85,6 +87,7 @@ DEFAULT_CONFIG = _apply_env_overrides({
     "max_risk_discuss_rounds": 1,
     "max_recur_limit": 100,
     "analyst_concurrency_limit": 1,
+    "max_analyst_tool_rounds": 20,
     # News / data fetching parameters
     # Increase for longer lookback strategies or to broaden macro coverage;
     # decrease to reduce token usage in agent prompts.

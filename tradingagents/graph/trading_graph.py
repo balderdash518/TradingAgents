@@ -48,7 +48,7 @@ class TradingAgentsGraph:
 
     def __init__(
         self,
-        selected_analysts=("market", "social", "news", "fundamentals"),
+        selected_analysts=("market", "news", "fundamentals"),
         debug=False,
         config: dict[str, Any] = None,
         callbacks: list | None = None,
@@ -111,10 +111,12 @@ class TradingAgentsGraph:
             self.tool_nodes,
             self.conditional_logic,
             analyst_concurrency_limit=self.config.get("analyst_concurrency_limit", 1),
+            max_analyst_tool_rounds=self.config.get("max_analyst_tool_rounds", 20),
         )
 
         self.propagator = Propagator(
             max_recur_limit=self.config.get("max_recur_limit", 100),
+            max_concurrency=self.config.get("analyst_concurrency_limit", 1),
         )
         self.reflector = Reflector(self.quick_thinking_llm)
         self.signal_processor = SignalProcessor(self.quick_thinking_llm)
