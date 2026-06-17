@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from tradingagents.backtesting.tradingagents_repro import (
     compute_metrics,
+    decision_status,
     load_config,
     run_agents,
 )
@@ -37,6 +38,11 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Debug option: only run the first N trading dates per ticker.",
     )
+    parser.add_argument(
+        "--status",
+        action="store_true",
+        help="Show cached-decision progress and exit without LLM calls.",
+    )
     return parser.parse_args()
 
 
@@ -44,6 +50,10 @@ def main() -> None:
     load_dotenv()
     args = parse_args()
     cfg = load_config(Path(args.config))
+
+    if args.status:
+        print(decision_status(cfg).to_string(index=False))
+        return
 
     if args.run_agents:
         cache = run_agents(cfg, resume=not args.no_resume, limit_dates=args.limit_dates)
@@ -59,4 +69,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

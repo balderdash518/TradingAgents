@@ -156,6 +156,14 @@ class TradingAgentsGraph:
         if temperature is not None and temperature != "":
             kwargs["temperature"] = float(temperature)
 
+        timeout = self.config.get("llm_timeout")
+        if timeout is not None and timeout != "":
+            kwargs["timeout"] = float(timeout)
+
+        max_retries = self.config.get("llm_max_retries")
+        if max_retries is not None and max_retries != "":
+            kwargs["max_retries"] = int(max_retries)
+
         return kwargs
 
     def _create_tool_nodes(self) -> dict[str, ToolNode]:

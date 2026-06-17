@@ -8,8 +8,8 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 # want a hard-coded value that should ignore the environment.
 config = DEFAULT_CONFIG.copy()
 config["llm_provider"] = "openrouter"
-config["deep_think_llm"] = "mistralai/mistral-small-3.2-24b-instruct"
-config["quick_think_llm"] = "mistralai/mistral-small-3.2-24b-instruct"
+config["deep_think_llm"] = "deepseek/deepseek-v4-pro"
+config["quick_think_llm"] = "deepseek/deepseek-v4-pro"
 config["backend_url"] = None
 config["max_debate_rounds"] = 1  # Increase debate rounds
 

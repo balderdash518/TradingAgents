@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -43,6 +44,10 @@ class ReproConfig:
     max_debate_rounds: int = 1
     max_risk_discuss_rounds: int = 1
     temperature: float | None = 0.0
+    llm_timeout: float = 120
+    llm_max_retries: int = 3
+    date_max_retries: int = 2
+    date_retry_sleep_seconds: float = 30
     asset_type: str = "stock"
 
 
@@ -61,6 +66,10 @@ def load_config(path: Path) -> ReproConfig:
         max_debate_rounds=int(data.get("max_debate_rounds", 1)),
         max_risk_discuss_rounds=int(data.get("max_risk_discuss_rounds", 1)),
         temperature=data.get("temperature", 0.0),
+        llm_timeout=float(data.get("llm_timeout", 120)),
+        llm_max_retries=int(data.get("llm_max_retries", 3)),
+        date_max_retries=int(data.get("date_max_retries", 2)),
+        date_retry_sleep_seconds=float(data.get("date_retry_sleep_seconds", 30)),
         asset_type=data.get("asset_type", "stock"),
     )
 
@@ -132,6 +141,8 @@ def make_agent_config(cfg: ReproConfig) -> dict[str, Any]:
     agent_config["max_debate_rounds"] = cfg.max_debate_rounds
     agent_config["max_risk_discuss_rounds"] = cfg.max_risk_discuss_rounds
     agent_config["temperature"] = cfg.temperature
+    agent_config["llm_timeout"] = cfg.llm_timeout
+    agent_config["llm_max_retries"] = cfg.llm_max_retries
     agent_config["results_dir"] = str(cfg.output_dir / "agent_logs")
     agent_config["memory_log_path"] = str(cfg.output_dir / "memory" / "trading_memory.md")
     agent_config["data_cache_dir"] = str(cfg.output_dir / "cache")
@@ -172,7 +183,23 @@ def run_agents(cfg: ReproConfig, resume: bool = True, limit_dates: int | None = 
                 print(f"[skip] {ticker} {trade_date} already cached")
                 continue
             print(f"[run] {ticker} {trade_date}")
-            final_state, rating = graph.propagate(ticker, trade_date, asset_type=cfg.asset_type)
+            final_state = None
+            rating = "Hold"
+            for attempt in range(1, cfg.date_max_retries + 2):
+                try:
+                    final_state, rating = graph.propagate(
+                        ticker, trade_date, asset_type=cfg.asset_type
+                    )
+                    break
+                except Exception as exc:
+                    if attempt > cfg.date_max_retries:
+                        raise
+                    print(
+                        f"[retry] {ticker} {trade_date} failed on attempt {attempt}: "
+                        f"{type(exc).__name__}: {exc}. Sleeping "
+                        f"{cfg.date_retry_sleep_seconds:.0f}s before retry."
+                    )
+                    time.sleep(cfg.date_retry_sleep_seconds)
             exposure = exposure_map.get(rating, 0.0)
             append_decision(
                 cache_file,
@@ -181,7 +208,9 @@ def run_agents(cfg: ReproConfig, resume: bool = True, limit_dates: int | None = 
                     "date": trade_date,
                     "rating": rating,
                     "exposure": exposure,
-                    "final_trade_decision": final_state.get("final_trade_decision", ""),
+                    "final_trade_decision": final_state.get("final_trade_decision", "")
+                    if final_state
+                    else "",
                 },
             )
             cached[(ticker, trade_date)] = {"rating": rating, "exposure": str(exposure)}
@@ -251,6 +280,31 @@ def compute_metrics(cfg: ReproConfig) -> pd.DataFrame:
     df.to_csv(metrics_path(cfg.output_dir), index=False)
     markdown_path(cfg.output_dir).write_text(metrics_to_markdown(df), encoding="utf-8")
     return df
+
+
+def decision_status(cfg: ReproConfig) -> pd.DataFrame:
+    decisions = load_decision_cache(decision_cache_path(cfg.output_dir))
+    rows = []
+    for ticker in cfg.tickers:
+        all_dates = trading_dates(ticker, cfg.start, cfg.end)
+        # The last trading day has no next-day close-to-close return inside the
+        # configured window, so metrics require decisions through the penultimate
+        # trading date. run_agents still caches the final date for completeness.
+        metric_dates = all_dates[:-1]
+        cached_dates = {date for t, date in decisions if t == ticker}
+        missing_for_metrics = [date for date in metric_dates if date not in cached_dates]
+        rows.append(
+            {
+                "ticker": ticker,
+                "cached_decisions": len([date for date in all_dates if date in cached_dates]),
+                "total_trading_days": len(all_dates),
+                "required_for_metrics": len(metric_dates),
+                "missing_for_metrics": len(missing_for_metrics),
+                "ready_for_metrics": len(missing_for_metrics) == 0,
+                "next_missing_date": missing_for_metrics[0] if missing_for_metrics else "",
+            }
+        )
+    return pd.DataFrame(rows)
 
 
 def metrics_to_markdown(df: pd.DataFrame) -> str:

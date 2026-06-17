@@ -49,6 +49,20 @@ conda activate tradingagents
 python scripts/reproduce_tradingagents_table.py --run-agents --limit-dates 1
 ```
 
+For a faster and more stable approximation, use the fast config. It removes the
+Sentiment Analyst, which avoids Reddit / StockTwits calls, and uses Mistral on
+OpenRouter because it has passed both plain and structured-output smoke tests:
+
+```powershell
+python scripts/reproduce_tradingagents_table.py --config configs/tradingagents_repro_fast.json --run-agents --limit-dates 1
+```
+
+Full fast run:
+
+```powershell
+python scripts/reproduce_tradingagents_table.py --config configs/tradingagents_repro_fast.json --run-agents
+```
+
 Then run the full experiment:
 
 ```powershell
@@ -63,3 +77,8 @@ After decisions are cached, recompute metrics without any LLM calls:
 python scripts/reproduce_tradingagents_table.py
 ```
 
+Check progress without calling the LLM:
+
+```powershell
+python scripts/reproduce_tradingagents_table.py --status
+```

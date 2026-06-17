@@ -70,6 +70,10 @@ DEFAULT_CONFIG = _apply_env_overrides({
     # variation on models that honor it; reasoning models largely ignore it
     # and no setting makes LLM output bit-identical across runs (see README).
     "temperature": None,
+    # OpenAI-compatible client transport settings. These are forwarded to the
+    # underlying SDK for providers such as OpenRouter, DeepSeek, Qwen, etc.
+    "llm_timeout": 120,
+    "llm_max_retries": 3,
     # Checkpoint/resume: when True, LangGraph saves state after each node
     # so a crashed run can resume from the last successful step.
     "checkpoint_enabled": False,
